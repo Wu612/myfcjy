@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>系统管理</title>
+	</head>
+	<link rel="stylesheet" type="text/css" href="../css/ext-all.css"/>
+	<link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.css"/>
+	<link rel="stylesheet" type="text/css" href="../css/fc-all.css"/>
+	<body class="xn-body">
+		<div class="xn_nowpath">首页/用户管理/系统管理</div>
+		
+		<div id="wrap">
+			<!--表单部分-->
+			<div class="xn_section_wrap">
+			  <div class="xn_search_form" id="mainSearchBox">
+			  	
+			  	<button class="xn_btn xn_btn_primary"  style="float:right; margin-right: 20px;" id="" onclick="userAddAndEdit();">
+			  		<i class="icon icon-plus"></i>&nbsp;&nbsp;添加
+			  	</button>
+			  </div>
+				
+			</div>
+			<!--表格部分-->
+			
+			<div class="xn_section_wrap">
+				<div class="xn_section_title">
+					<span class="icon_wrap"><i class="icon-th"></i></span>
+					<span class="xn_title_name">系统人员列表</span>
+				</div>
+				<div id="mainTableBox"></div>
+			</div>
+			
+			
+		</div>
+	</body>
+	<script src="../lib/jquery-1.8.3.min.js"></script>
+	<script src="../js/basicParameter.js"></script>
+	<script src="../lib/ext-all.js"></script>
+	<script src="../js/basicExtModule.js"></script>
+	<script src="../lib/PagingToolBar.js"></script>
+	<script src="../js/tools.js"></script>
+	
+	<script type="text/javascript">
+		
+		var GLOBAL=GLOBAL||{};
+		
+		Ext.onReady(function(){
+			
+		 Ext.EventManager.onWindowResize(function () {
+          GLOBAL.userGrid.getView().refresh();
+    });
+
+			
+			
+			GLOBAL.searchBox=Ext.create('Ext.form.Panel',{
+				renderTo:'mainSearchBox',
+				layout:'hbox',
+				margin:'10',
+				items:[
+				   
+				   new Ext.custom.bigtextfield({
+				   	
+				   	   itemId:'name',
+				   	   name:'name',
+				   	   emptyText:'模糊查找:姓名'
+				   }),{
+				   	  xtype:'panel',
+				   	  html:'<button class="xn_btn xn_btn_success" id="btn_search" onclick="getUserList();">查&nbsp;&nbsp;询</button>'
+				   }
+				
+				]
+				
+			});
+			
+			 //分页控件分页
+		 GLOBAL.pageToolBar=Ext.create('PagingToolBar',{
+		 	 id:'pageToolBar',
+		 	 onChange:function(pt,pageFirst,pageSize,type){
+		 	 	var pageStart=pageFirst/pageSize+1;
+		 	 	getUserList(pageStart,pageFirst)
+		 	 }
+		 });
+			 
+		//表格准备store;
+		
+		GLOBAL.userListStore=Ext.create('Ext.data.Store',{
+			fields:['userName','turename','power','phone','upDateAt','tokenId','powerCode','createAt']
+		})
+			
+			
+			
+			//生成表格
+			
+		 GLOBAL.userGrid=Ext.create('Ext.grid.Panel',{
+		 	  renderTo:'mainTableBox',
+		 	  minHeight:BPR.gridMinHeight,
+		 	    id:'mainGridId',
+		 	  store:GLOBAL.userListStore,
+		 	  bbar:GLOBAL.pageToolBar,
+		 	  columns:[
+		 	     {header:'用户名',width:150,dataIndex:'userName'},
+		 	     {header:'姓名',width:150,dataIndex:'turename',flex:1},
+		 	     {header:'后台权限',width:120,dataIndex:'power'},
+		 	     {header:'手机',width:150,dataIndex:'phone'},
+		 	     {header:'编辑日期',width:150,dataIndex:'upDateAt'},
+		 	     {header:'操作',width:200,dataIndex:'tokenId',
+		 	       renderer:function(value,cell,recode){
+		 	       	//value--单元格的数据
+		 	       	 return '<a class="xn_tablea" onclick="userAddAndEdit(' + value + ')">编辑</a>'
+		 	       	 
+		 	       	      +'<a class="xn_tablea" onclick="userDelete(' + value + ')">删除</a>';
+		 	       }  
+		 	     }
+		 	  
+		 	  
+		 	  
+		 	  ]
+		 })
+		 
+		 
+		//权限选择
+		
+		GLOBAL.privilegeStore=Ext.create('Ext.data.Store',{
+			
+			fields:['power','powerCode']
+		});
+		
+		$.ajax({
+			 type:'get',
+			 url:'/Handler/CourseHandler.ashx?action=getpower',
+			 async:false,
+			 dataType:'json'
+		}).done(function(data){
+			errTip(data,function(){
+				GLOBAL.privilegeStore.loadData(data.data);
+			})
+		}).fail(function(){
+			Ext.Msg.alert('请求失败')
+		})
+		//页面加载完成获取列表数据
+		getUserList();
+		
+		
+		$(document).keypress(function(e){
+			
+			if(e.keyCode==13){
+				getUserList();
+			}
+		})
+			
+		})
+		
+		
+			//请求表格数据
+			
+	 function getUserList(pageStart,pageFirst){
+	 	
+	 	msgTip=new Ext.LoadMask(Ext.getCmp('mainGridId'),{
+	 		msg:'数据加载中，请稍后...',
+	 		removeMask:true
+	 	})
+	 	  msgTip.show();
+	 	 var searchText=GLOBAL.searchBox.down('#name').getValue();
+	 	 $.ajax({
+	 	 	 type:'get',
+	 	 	 url:'/Handler/AdminHandler.ashx?action=show',
+	 	 	 async:false,
+	 	 	 dataType:'json',
+	 	 	 data:{
+	 	 	 	searchText:searchText,
+	 	 	 	pageStart:pageStart?pageStart:1
+	 	 	 }
+	 	 }).done(function(data){
+	 	 	errTip(data,function(){
+	 	 	 GLOBAL.pageToolBar.setPageSize(data.data.pageSize);
+	 	 	 GLOBAL.pageToolBar.loadPage(pageFirst?pageFirst:0,data.data.count);
+	 	 	 GLOBAL.userListStore.loadData(data.data.list)	
+	 	 	})
+	 	 }).fail(function(){
+	 	 	Ext.Msg.alert('错误，获取列表失败！')
+	 	 })
+	 	   msgTip.hide();
+	 }
+		
+	//生成弹出窗口
+	 
+	    function userAddAndEdit(userId){
+	     GLOBAL.EditWin=new Ext.custom.basicWindow({
+	     	 title:'添加',
+	     	 width:480,
+	     	 height:280,
+	     	 items:[
+	     	   
+	     	    new Ext.custom.middletextfield({
+	     	    	margin:'10 0 0 30',
+	     	    	itemId:'userName',
+	     	    	fieldLabel:'用户名',
+	     	    	beforeLabelTextTpl:required,
+	     	    	labelAlign:'right'
+	     	    }),
+	     	   new Ext.custom.middletextfield({
+	     	   	    margin:'10 0 0 30',
+	     	   	    itemId:'name',
+	     	   	    fieldLabel:'姓名',
+	     	   	    beforeLabelTextTpl:required,
+	     	   	    labelAlign:'right'
+	     	   }),
+	     	   new Ext.custom.middletextfield({
+	     	   	    margin:'10 0 0 30',
+	     	   	    itemId:'phone',
+	     	   	    fieldLabel:'手机号',
+	     	   	    beforeLabelTextTpl:required,
+	     	   	    labelAlign:'right' 
+	     	   	  }),
+	     	   	 new Ext.custom.basicCombo({
+	     	   	 	margin:'10 0 0 30',
+	     	   	 	width:370,
+	     	   	 	fieldLabel:'权限选择',
+	     	   	 	itemId:'powerCode',
+	     	   	 	labelAlign:'right',
+	     	   	 	displayField:'power',
+	     	   	 	valueField:'power',
+	     	   	 	store:GLOBAL.privilegeStore
+	     	   	 }),{
+	     	   	 	 xtype:'panel',
+	     	   	 	 layout:'hbox',
+	     	   	 	 margin:'10 0 0 140',
+	     	   	 	 items:[
+	     	   	 	 
+	     	   	 	     {
+	     	   	 	     	xtype:'button',
+	     	   	 	     	margin:'10 0 0 10',
+	     	   	 	     	text:'确定',
+	     	   	 	     	width:80,
+	     	   	 	     	height:30,
+	     	   	 	     	handler:function(){
+	     	   	 	  	//添加或修改管理员
+                         //获取数据  
+                      
+                       
+	  var userInfos={
+	  	
+	  	 userName:GLOBAL.EditWin.down('#userName').getValue(),
+	  	  tokenId:GLOBAL.userId,
+	  	 turename:GLOBAL.EditWin.down("#name").getValue(),
+	  	 phone:GLOBAL.EditWin.down("#phone").getValue(),
+	  	 password:GLOBAL.userId?"":"123456",
+	  	 power:GLOBAL.EditWin.down("#powerCode").getValue()
+	  };
+	  console.log(userInfos);
+	  
+	   //发送请求
+           // 有用户id 修改  没有添加
+         var urls=GLOBAL.userId?"/Handler/AdminHandler.ashx?action=update":"/Handler/AdminLoginAndRegHandler.ashx?action=add";
+         
+          //提交
+          $.ajax({
+          	 type:'post',
+          	 async:false,
+          	 url:BPR.domain+urls,
+          	 data:userInfos,
+          	 dataType:'json'
+          }).done(function(data){
+          	 errTip(data,function(){
+          	 Ext.Msg.alert("温馨提示","保存成功",function(){
+          	 	GLOBAL.EditWin.hide();
+          	 	getUserList();
+          	 });
+          	 })
+          })
+         
+         
+         
+         
+	     	   	 	     	},
+	     	   	 	     	style:'background:#6EC131;border:0'
+	     	           },
+	     	           { 
+	     	              xtype:'button',
+	     	              margin:'10 0 0 10',
+	     	              text:'取消',
+	     	              width:80,
+	     	              height:30,
+	     	              style:'border:0',
+	     	              handler:function(){
+	     	              	GLOBAL.EditWin.hide();
+	     	              }
+	     	           
+	     	           }
+	     	    ]
+	     	   
+	     	   }
+	     	 ]
+	     	
+	     })
+	    	GLOBAL.EditWin.show();
+	    	
+	     //判断是添加还是删除
+	     
+	     if(userId){
+	     	
+	     	var datan=GLOBAL.userGrid.getSelectionModel().getSelection()[0].data
+	     	GLOBAL.EditWin.down("#userName").setValue(datan.userName);
+	     	GLOBAL.EditWin.down("#userName").setDisabled(true);
+	     	GLOBAL.EditWin.down("#name").setValue(datan.turename)
+	     	GLOBAL.EditWin.down("#phone").setValue(datan.phone);
+	     	GLOBAL.EditWin.down("#powerCode").setValue(datan.power);
+	     	GLOBAL.userId=datan.tokenId;
+	     	}else{
+	     		GLOBAL.userId="";
+	     	}
+	    }
+	    
+	    function userDelete(userId){
+	    	
+	    	 $.ajax({
+	    	 	type:'get',
+	    	 	url:'/Handler/AdminHandler.ashx?action=delete',
+	    	 	async:false,
+	    	 	data:{tokenId:userId},
+	    	 	dataType:'json'
+	    	 }).done(function(result){
+	    	 	errTip(result,function(){
+	    	 		Ext.Msg.alert('温馨提示','加载成功',function(){
+	    	 			 getUserList();
+	    	 		})
+	    	 	})
+	    	 })
+	    }
+	</script>
+</html>

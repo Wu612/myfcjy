@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style type="text/css">
+			div{
+				width: 200px;
+				height: 200px;
+				margin: 0 auto;
+				background: skyblue;
+				position: relative;
+			}
+						/*div::after{
+				content: url(bullet.png);
+			}
+		    div::before{
+		    	content:  url(bullet.png);
+		    }
+		    .box{
+		    	border: 1px solid #666;
+		    }*/
+		    /*.box a:after{
+		    	content: attr(href);
+		    }*/
+		    
+		   div::after{
+		   	content: "";
+		  	border: 10px solid transparent;
+		  	border-bottom: 10px solid red;
+		  /*transform:rotate(180deg);*/
+		  /*	position: absolute;*/
+		  	/*top: -20px;
+		  	left: 80%;*/
+		  }
+		    /*div::first-letter{
+		    	color: red;
+		    }
+		    div::first-line{
+		    	color: red;
+		    	font-size: 20px;
+		    }*/
+		</style>
+	</head>
+	<body>
+		<!--:hover :active 
+		:focus :nth-child()
+		:first-child 
+		：last-child
+		//伪元素
+		:after
+		:before-->
+<!--	
+		<div>你好
+				sdfhd sfh kdshfsd
+				sdfhdsfhkdshfsd
+		</div>-->
+		<div class="box">
+			<a href="http://www.baidu.com">百度地址</a>
+		</div>
+	</body>
+	
+</html>

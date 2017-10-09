@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" href="../css/ext-all.css" />
+		<link rel="stylesheet" href="../css/font-awesome/css/font-awesome.css" />
+		<link rel="stylesheet" href="../css/fc-all.css" />
+		
+	</head>
+	<body class="index_body">
+		
+		<div class="xn_nowpath"></div>
+		<div class="xn_section_wrap">
+			<div class="xn_search_form" id="mainSearchBox"></div>
+		</div>
+		
+		<div class="xn_section_wrap">
+			<div class="xn_section_title">
+				<span class="icon_wrap"><i class="icon-th"></i></span>
+				<span class="xn_title_name">学员列表</span>
+			</div>
+			<div id="mainTableBox"></div>
+		</div>
+	</body>
+	<script src="../lib/jquery-1.8.3.min.js"></script>
+	<script src="../js/basicParameter.js"></script>
+	<script src="../lib/ext-all.js"></script>
+	<script src="../js/basicExtModule.js"></script>
+	<script src="../lib/PagingToolBar.js"></script>
+	<script src="../js/tools.js"></script>
+	<script type="text/javascript">
+		var GLOBAL=GLOBAL||{};
+		
+		Ext.onReady(function(){
+			//表单创建；
+		 GLOBAL.searchBox=Ext.create('Ext.form.Panel',{
+		 	  
+		 	     renderTo:'mainSearchBox',
+		 	     id:'searchBox',
+		 	     layout:'hbox',
+		 	     margin:10,
+		 	     items:[
+		 	       new Ext.custom.textfield({
+		 	       	   itemId:'userName',
+		 	       	   emptyText:'用户名'
+		 	       	   }),
+		 	       new Ext.custom.textfield({
+		 	       	   itemId:'email',
+		 	       	   emptyText:'邮箱'
+		 	       	   }),
+		 	       new Ext.custom.textfield({
+		 	       	   itemId:'phone',
+		 	       	   emptyText:'手机号'
+		 	       }),{
+		 	       	  xtype:'panel',
+		 	       	  html:'<button class="xn_btn xn_btn_success" id="btn_search" onclick="getUserList();">查&nbsp;&nbsp;询</botton>'
+		 	       }
+		 	     
+		 	     ]
+		 })
+		 
+		   //创建store; 赋值给grid;
+		  GLOBAL.userListStore=Ext.create('Ext.data.Store',{
+		  	 fields:['userName','tokenId','email','phone','createAt','isstate']
+		  })
+			
+		//创建表格；
+		GLOBAL.userGrid=Ext.create('Ext.grid.Panel',{
+			   
+			  renderTo:'mainTableBox',
+			  id:'mainGridId',
+			  minHeight:BPR.gridMinHeight,
+			  store:GLOBAL.userListStore,
+			  bbar:GLOBAL.pageToolBar,
+			  columns:[
+			     {header:'用户名',width:150,dataIndex:'userName'},
+			     {header:'邮箱',width:150,dataIndex:'email',flex:1},
+			     {header:'手机',width:120,dataIndex:'phone'},
+			     {header:'注册日期',width:150,dataIndex:'createAt'},
+			     {header:'状态',width:150,dataIndex:'isstate'},
+			     {header:'操作',width:200,dataIndex:'tokenId'}
+			  
+			  ]
+		})
+			
+		})
+		
+		  function getUserList(){
+		  	
+		  	 $.ajax({
+		  	 	type:'post',
+		  	 	url:'/Handler/AdminHandler.ashx?action=usershow',
+		  	 	async:false,
+		  	 	data:{pageStar:1},
+		  	 	dataType:'json'
+		  	 }).done(function(result){
+		  	 	errTip(result,function(){
+		  	 GLOBAL.userListStore.loadData(result.data.list)
+		  	 	})
+		  	 })
+		  }
+	</script>
+</html>

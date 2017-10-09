@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		 <link href="../css/ext-all.css" rel="stylesheet"/>
+  <link href="../css/font-awesome/css/font-awesome.css" rel="stylesheet"/>
+  <link href="../css/fc-all.css" rel="stylesheet"/>
+  <link href="../css/ClearButton.css" rel="stylesheet"/>
+	</head>
+	<body class="xn-body">
+		<div class="xn_nowpath"> ---- 课程添加 ----</div>
+		<div class="xn_section_wrap">
+			<div class="xn_section_title">
+				<span class="icon_wrap"><i class="icon-leaf"></i> </span>
+				<span class="xn_title_name">课程信息</span>
+			</div>
+			<div class="xn_search_form" id="basicInfoBox"></div>
+			
+		</div>
+		
+	</body>
+	<script src="../lib/jquery-1.8.3.min.js" type="text/javascript"></script>
+<script src="../js/basicParameter.js" type="text/javascript"></script>
+<script src="../lib/ext-all.js" type="text/javascript"></script>
+<script src="../js/basicExtModule.js" type="text/javascript"></script>
+<script src="../lib/PagingToolBar.js" type="text/javascript"></script>
+<script src="../js/tools.js" type="text/javascript"></script>
+<script src="../js/ClearButton.js" type="text/javascript"></script>
+<script type="text/javascript">
+	  var GLOBAL = GLOBAL || {};
+	 Ext.onReady(function(){
+	 	
+	 //创建一级下拉store
+	 GLOBAL.categoryStore1 = Ext.create('Ext.data.Store', {
+      fields: ['fatherId', 'sysId', 'title']
+    });
+
+    //专业目录二级Store
+    GLOBAL.categoryStore2 = Ext.create('Ext.data.Store', {
+      fields: ['fatherId', 'sysId', 'title']
+    });
+
+    //专业目录三级Store
+    GLOBAL.categoryStore3 = Ext.create('Ext.data.Store', {
+      fields: ['fatherId', 'sysId', 'title']
+    });
+    
+    //给一级下拉加载数据
+    $.ajax({
+    	type:"get",
+    	url:"/Handler/CourseHandler.ashx?action=getcategory",
+    	dataType:"json",
+    	async:false
+    	
+    }).done(function(result){
+    	errTip(result,function(){
+    	
+    		GLOBAL.categoryData=result.data;
+    			console.log(GLOBAL.categoryData)
+    			var arr=[];
+    		for(var i=0;i<GLOBAL.categoryData.length;i++){
+    			
+    				if(GLOBAL.categoryData[i].fatherId==0){
+    					arr.push(GLOBAL.categoryData[i]);
+    					
+    				}
+    
+    		}
+    		
+    		 GLOBAL.categoryStore1.loadData(arr);
+    			
+    	})
+    	
+    })
+    
+    
+	 	
+	  GLOBAL.basicInfoPanel=Ext.create("Ext.form.Panel",{
+	  		renderTo:"basicInfoBox",
+	  		layout:"hbox",
+	  		margin:"10",
+	  		items:[	
+	  				{
+	  					xtype:"panel",
+	  					items:[
+	  						{
+	  							xtype:"panel",
+	  							layout:"hbox",
+	  							margin:"20 0 0 0",
+	  							items:[
+	  								new Ext.custom.bigtextfield({
+	  									fieldLabel:"课程名称",
+	  									beforeLabelTextTpl:required,
+	  									itemId:"name"
+	  									
+	  								}),{
+	  									xtype:"panel",
+	  									margin:"5 0 0 10",
+	  									html:'<span style="color:#777">60字以内</span>'
+	  								}
+	  								
+	  							]
+	  						},
+	  						{
+					          xtype: 'panel',
+					          layout: "hbox",
+					          margin: '20 0 0 0',
+					          items: [new Ext.custom.bigtextfield({
+					            itemId: "describe",
+					            name: "name",
+					            fieldLabel: '课程描述',
+					            beforeLabelTextTpl: required
+					          }), {
+					            xtype: 'panel',
+					            margin: '5 0 0 10',
+					            html: '<span style="color: #777;">100字以内</span>'
+					          }]
+					        },
+					        {
+					          xtype: 'panel',
+					          layout: "hbox",
+					          margin: '20 0 0 0',
+					          items: [new Ext.custom.middletextfield({
+					            itemId: "price",
+					            name: "name",
+					            fieldLabel: '课程价格',
+					            beforeLabelTextTpl: required
+					          }), {
+					            xtype: 'panel',
+					            margin: '5 0 0 10',
+					            html: '<span style="color: #777;">课程的价格，以元为单位，免费课程设置0</span>'
+					          }]
+					        },{
+					        	xtype:"panel",
+					        	margin:"20 0 0 0 ",
+					        	layout:"hbox",
+					        	items:[
+					        			new Ext.custom.basicCombo({
+					        				 width: 250,
+								            fieldLabel: '专业选择',
+								            itemId: 'CategoryOne',
+								            labelAlign: 'right',
+								            displayField: 'title',
+								            valueField: 'sysId',
+								            store: GLOBAL.categoryStore1,
+								            plugins: ['clearbutton'],
+								            listeners:{
+								            	change:function(combo,newval,odlval,opt){
+								            		var arr=[];
+								            		for(var i=0;i<GLOBAL.categoryData.length;i++){
+								            			if(GLOBAL.categoryData[i].fatherId==newval){
+								            				arr.push(GLOBAL.categoryData[i]);
+								            			}
+								            		}
+								            		GLOBAL.categoryStore2.loadData(arr);
+								            		GLOBAL.basicInfoPanel.down("#CategoryTwo").setValue("");
+								            		GLOBAL.basicInfoPanel.down("#CategoryThree").setValue("");
+								            	}
+								            	
+								            }
+					        				
+					        			}),
+					        			 new Ext.custom.basicCombo({
+								            itemId: 'CategoryTwo',
+								            labelAlign: 'right',
+								            displayField: 'title',
+								            valueField: 'sysId',
+								            store: GLOBAL.categoryStore2,
+								            plugins: ['clearbutton'],
+								            listeners:{
+								            	change:function(combo,newval,oldval,opt){
+								            		var arr=[];
+								            			for(var i=0;i<GLOBAL.categoryData.length;i++){
+								            				if(GLOBAL.categoryData[i].fatherId==newval){
+								            					arr.push(GLOBAL.categoryData[i]);
+								            				}
+								            			}
+								            			GLOBAL.categoryStore3.loadData(arr);
+								            			GLOBAL.basicInfoPanel.down("#CategoryThree").setValue("");
+								            			
+								            	}
+								            }
+					        			}),new Ext.custom.basicCombo({
+								            itemId: 'CategoryThree',
+								            labelAlign: 'right',
+								            displayField: 'title',
+								            valueField: 'sysId',
+								            store: GLOBAL.categoryStore3,
+								            plugins: ['clearbutton']
+								          })
+					        		
+					        	]
+					        },
+					        {
+					        	xtype:"panel",
+					        	margin:"20 0 10 10",
+					        	html:'<button id="save" class="xn_btn xn_btn_success" onclick="saveBasicMsg()">保存</button>'
+					        }
+					        
+	  						
+	  						
+	  					]
+	  				},{
+	  					
+	  					xtype:"panel",
+	  					 margin: '20 0 0 40',
+					        html: '<div style="width:240px;height:172px;margin-left:30px;">' +
+					        '<div style="margin-top:3px;">课程封面:</div>' +
+					        '<div id="div_coverFile" style="margin-top:13px;width:210px;height:110px;">' +
+					        '<img id="img_courseCover" style="height: 110px;width: 210px;" src="">' +
+					        '</div>' +
+					        '<div style="margin-top:10px;">' +
+					        '<a id="uploadCourseCover" style="float:right;margin-right:30px;color: #3372e6;cursor: pointer;"  onclick="upLoad();">上传</a>' +
+					        '<a id="clearCourseCover" style="color: #3372e6;cursor: pointer;" onclick="clearCover()">清除</a>' +
+					        '</div></div>'
+					      }
+	  				
+	  		
+	  			
+	  		
+	  		]
+	  	
+	  	
+	  	
+	  })
+	 	//判断是否是编辑操作
+	 		if(getParam("edit")=="edit"){
+	 			document.title="课程编辑";
+	 			$(".xn_nowpath").html("-----课程编辑-----");
+	 			
+	 			loadData();
+	 			
+	 		}
+	 	
+	 	
+	 })
+	
+	
+	
+	//保存基本信息
+	function saveBasicMsg(){
+		var courseInfo={
+			Cname: GLOBAL.basicInfoPanel.down("#name").getValue(),
+			Cdescribe:GLOBAL.basicInfoPanel.down("#describe").getValue(),
+			Cprice:GLOBAL.basicInfoPanel.down("#price").getValue(),
+			CategoryOne:GLOBAL.basicInfoPanel.down("#CategoryOne").getValue(),
+			CategoryTwo:GLOBAL.basicInfoPanel.down("#CategoryTwo").getValue(),
+			CategoryThree:GLOBAL.basicInfoPanel.down("#CategoryThree").getValue(),
+			Cpic:$("#img_courseCover").attr('src')
+		}
+		$.ajax({
+			type:"POST",
+			url:"/Handler/CourseHandler.ashx?action=add",
+			async:false,
+			dataType:"json",
+			data:courseInfo
+		}).done(function(result){
+			errTip(result,function(){
+				if(result.success){
+					window.location.search='edit=edit&courseId='+result.ID;
+				
+				}
+				
+				
+			})
+		})
+		
+		
+	}
+	
+	
+	//加载课程信息
+	function loadData(){
+		$("#save").css("display","none");
+		$.ajax({
+			type:"GET",
+			data:{
+				ID:getParam("courseId")
+			},
+			dataType:"json",
+			url:"/Handler/CourseHandler.ashx?action=getcourse",
+			async:false
+		}).done(function(result){
+			errTip(result,function(){
+					var data=result.data.courselist;
+				  GLOBAL.basicInfoPanel.down("#name").setValue(data.Cname);
+		          GLOBAL.basicInfoPanel.down("#describe").setValue(data.Cdescribe);
+		          GLOBAL.basicInfoPanel.down("#price").setValue(data.Cprice);
+		          GLOBAL.basicInfoPanel.down("#CategoryOne").setValue(parseInt(data.CategoryOne));
+		          GLOBAL.basicInfoPanel.down("#CategoryTwo").setValue(parseInt(data.CategoryTwo));
+		          GLOBAL.basicInfoPanel.down("#CategoryThree").setValue(parseInt(data.CategoryThree));
+          //GLOBAL.courseDetailPanel.down("#articleTxt").setValue(data.CDetails)	
+			$("#img_courseCover").attr("src", data.Cpic);	
+				
+		})
+			
+			
+		})
+		
+		
+		
+	}
+	
+	
+	
+	//上传
+	function upLoad(){
+	 var dlg = new Ext.custom.uploadFileWin({
+      title: '封面上传',
+      customMaxSize: 1024000,
+      customSetValueInput: "",
+      customUploadType: 0,
+      customFilefieldLabel: '附件',
+      customUrl: BPR.domain + "/Handler/UpLoadPicHandler.ashx",
+      cbFn: function (result) {
+
+        $('#img_courseCover').attr('src', result.cacheName);
+        dlg.close();
+
+        //如果是编辑课程，则上传完图片就保存一次课程信息，避免用户上传图片以后忘记点击课程保存。
+//      if (GLOBAL.courseId) {
+//        saveAll();
+//      } else {
+       Ext.Msg.alert("温馨提示", "上传封面图片成功！");
+//      }
+
+
+      }
+    }).show();
+		
+}
+	//清除图片封面
+	function clearCover(){
+		
+		$("#img_courseCover").attr("src","");
+		
+	}
+	
+</script>
+</html>

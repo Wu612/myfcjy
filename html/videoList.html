@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>视频管理</title>
+		<link rel="stylesheet" href="../css/ext-all.css" />
+		<link rel="stylesheet" href="../css/font-awesome/css/font-awesome.css" />
+		<link rel="stylesheet" href="../css/fc-all.css" />
+		<link rel="stylesheet" href="../css/ClearButton.css" />
+	</head>
+	<body class="xn-body">
+		<div class="xn_nowpath"></div>
+		
+		<div class="xn_section_wrap">
+			<div class="xn_search_form" id="mainVideo">
+				<button class="xn_btn xn_btn_primary" style="float:right;margin-right:30px;" onclick="videoAdd()">
+				<i class="icon icon-plus"></i>&nbsp;&nbsp;添加</button>
+			</div>
+		</div>
+		
+		<div class="xn_section_wrap">
+			<div class="xn_section_title">
+				<span class="icon_wrap"><i class="icon-th"></i></span>
+				<span class="xn_title_name">视频列表</span>
+			</div>
+			
+			<div id="mainVideoBox"></div>
+		</div>
+		
+	</body>
+	<script src="../lib/jquery-1.8.3.min.js"></script>
+	<script src="../js/basicParameter.js"></script>
+	<script src="../lib/ext-all.js"></script>
+	<script src="../js/basicExtModule.js"></script>
+	<script src="../lib/PagingToolBar.js"></script>
+	<script src="../js/tools.js"></script>
+	<script src="../js/ClearButton.js"></script>
+	<script type="text/javascript">
+		var GLOBAL=GLOBAL||{};
+		
+		Ext.onReady(function(){
+			//刷新页面重置grid
+		 Ext.EventManager.onWindowResize(function(){
+		 	GLOBAL.videoGrid.getView().refresh();
+		 })
+			
+		 GLOBAL.searchBox=Ext.create('Ext.form.Panel',{
+		 	
+		 	   renderTo:'mainVideo',
+		 	   id:'videoIdsss',
+		 	   margin:'10',
+		 	   layout:'hbox',
+		 	   items:[
+		 	     
+		 	     new Ext.custom.textfield({
+		 	     	 itemId:'userId',
+		 	     	 plugins:['clearbutton'],
+		 	     	 emptyText:'模糊查找：视频名称'
+		 	     }),{
+		 	     	
+		 	     	xtype:'panel',
+		 	     	html:'<button class="xn_btn xn_btn_success" style="" onclick="getVideoList()">查&nbsp;&nbsp;询</button>'
+		 	     }
+		 	    ]
+		 })
+		 //分页工具；
+		 
+		GLOBAL.pageToolBar=Ext.create('PagingToolBar',{
+			id:'pageToolBar',
+		  onChange:function(pt,pageFirst,pageSize,type){
+		  	//pt--分页组件; pageFirst; 0  3  6 ;pageSize;手动设置一页有多少数据；
+		  	//type;类型 ；上 下按钮；
+		  	 var pageStart=pageFirst/pageSize+1;
+		  	 getVideoList(pageStart,pageFirst);
+		  }
+		})
+		 
+			//表格store;
+		GLOBAL.videoStore=Ext.create('Ext.data.Store',{
+			
+			fields:['Vname','Vstate','ID','Vtime','createAt','Vurl']
+		})
+		
+           //表格grid;
+			
+			GLOBAL.videoGrid=Ext.create('Ext.grid.Panel',{
+				  renderTo:'mainVideoBox',
+				  minHeight:BPR.gridMinHeight,
+				  id:'videoGrid',
+				  bbar:GLOBAL.pageToolBar,
+				  store:GLOBAL.videoStore,
+				 
+				  columns:[
+				     
+				     {header:'视频名称',width:150,dataIndex:'Vname'},
+				     {header:'绑定的课程',flex:1,dataIndex:'Vstate'},
+				     {text:'视频时长',width:120,dataIndex:'Vtime'},
+				     {header:'上传日期',width:150,dataIndex:'createAt'},
+				     {header:'操作',width:250,dataIndex:'ID',
+				        renderer:function(value,cell,record){
+				        	
+				          if(record.data.Vstate!=""){
+				          	return '<a class="xn_tablea" onclick="videoAdd('+value+')">编辑</a>'
+				          }else{
+				          	return '<a class="xn_tablea" onclick="videoAdd('+value+')">编辑</a>'
+				          	     +'<a class="xn_tablea" onclick="delVideo('+value+')">删除</a>'
+				          }
+				        }
+				     }
+				  
+				  
+				  ]
+			})
+			getVideoList();
+		})
+		
+		  function getVideoList(pageStart,pageFirst){
+		  	
+		  	$.ajax({
+		  		type:'post',
+		  		url:BPR.domain+'/Handler/VideoHandler.ashx?action=showlist',
+		  		async:false,
+		  		data:{
+		  			searchText:GLOBAL.searchBox.down("#userId").getValue(),
+		  			pageStart:pageStart?pageStart:1
+		  		},
+		  		dataType:'json'
+		  	}).done(function(result){
+		  		errTip(result,function(){
+		  		  if(result&&result.success){
+		  		GLOBAL.pageToolBar.setPageSize(result.data.pageSize);
+		  		GLOBAL.pageToolBar.loadPage(pageFirst?pageFirst:0,result.data.count)
+		  		GLOBAL.videoStore.loadData(result.data.list);   	
+		  		  }
+		  		})
+		  	}).fail(function(){
+		  	 Ext.Msg.alert('温馨提示','获取列表数据失败！')
+		  	})
+		  }
+		
+		function videoAdd(videoId){
+			
+			GLOBAL.videoEdit=new Ext.custom.basicWindow({
+				title:'视频添加',
+				width:550,
+				height:280,
+				items:[
+				   new Ext.form.Panel({
+				   	  width:'100%',
+				   	  height:'100%',
+				   	  bodyPadding:10,
+				   	  border:0,
+				   	  items:[{
+				   	   xtype:'panel',
+				   	   layout:'hbox',
+				   	   margin:'20 0 0 0',
+				   	   items:[
+				   	     new Ext.custom.middletextfield({
+				   	     	margin:'0 0 0 30',
+				   	     	itemId:'videoId',
+				   	     	fieldLabel:'视频',
+				   	     	beforeLabelTextTpl:required,
+				   	     	labelAlign:'right',
+				   	     	disabled:true,
+				   	     	emptyText:'点击上传要上传的视频'
+				   	     }),{
+				   	     	
+				   	     	xtype:'button',
+				   	     	margin:'0 0 0 10',
+				   	     	text:'上传',
+				   	     	itemId:'videoUpId',
+				   	     	handler:function(){
+				   	     		upLoad()
+				   	     	}
+				   	     }
+				   	     
+				   	   ]
+				   	    
+				   	   },{
+				   	   	 xtype:'panel',
+				   	   	 layout:'hbox',
+				   	   	 items:[
+				   	   	   
+				   	   	   new Ext.custom.middletextfield({
+				   	   	   	  itemId:'videoNameId',
+				   	   	   	  margin:'10 0 0 30',
+				   	   	   	  fieldLabel:'视频名称',
+				   	   	   	  beforeLabelTextTpl:required,
+				   	   	   	  labelAlign:'right',
+				   	   	   }),{
+				   	   	   	  xtype:'panel',
+				   	   	   	  html:'<span style="color:#777;">60字以内</span>',
+				   	   	   	  margin:'15 0 0 10'
+				   	   	   }
+				   	   	 ]
+				   	   	  
+				   	   },{
+                           xtype:'panel',
+				   	   	  layout:'hbox',
+				   	   	  items:[
+				   	   	    new Ext.custom.middletextfield({
+				   	   	    	itemId:'videoTime',
+				   	   	    	margin:'10 0 0 30',
+				   	   	    	fieldLabel:'视频时长',
+				   	   	    	labelAlign:'right',
+				   	   	    	beforeLabelTextTpl:required
+				   	   	    }),{
+				   	   	    	xtype:'panel',
+				   	   	    	html:'<span style="color:#777;">填分钟数</span>',
+				   	   	    	margin:'15 0 0 10'
+				   	   	    }
+				   	   	  ]
+				   	   	
+				   	   },{
+				   	   	 xtype:'panel',
+				   	   	 layout:'hbox',
+				   	   	 margin:'10 0 0 140',
+				   	   	 items:[{
+				   	   	 	
+				   	   	 	xtype:'button',
+				   	   	 	text:'确定',
+				   	   	 	margin:'10 0 0 10',
+				   	   	 	width:80,
+				   	   	 	height:30,
+				   	   	 	handler:function(){
+				   	   	 	  
+				   	   	 	 var urls=GLOBAL.videoId?"/Handler/VideoHandler.ashx?action=update":"/Handler/VideoHandler.ashx?action=add";
+				   	   	 	 //准备好要发送的数据
+				   	   	 	 var videoInfo={
+				   	   	 	 	
+				   	   	 	 	ID:GLOBAL.video?GLOBAL.videoId:"",
+				   	   	 	 	Vname:GLOBAL.videoEdit.down("#videoNameId").getValue(),
+				   	   	 	 	Vtime:GLOBAL.videoEdit.down("#videoTime").getValue(),
+				   	   	 	 	Vurl:GLOBAL.videoEdit.down("#videoId").getValue()
+				   	   	 	 }
+				   	   	 	 
+				   	   	 	 $.ajax({
+				   	   	 	 	
+				   	   	 	 	type:'post',
+				   	   	 	 	url:urls,
+				   	   	 	 	async:false,
+				   	   	 	 	data:videoInfo,
+				   	   	 	 	dataType:'json'
+				   	   	 	 }).done(function(result){
+				   	   	 	 	errTip(result,function(){
+				   	   	 	 	Ext.Msg.alert('温馨提示','保存成功',function(){
+				   	   	 	 	GLOBAL.videoEdit.down("#videoId").setValue('');
+				   	   	 	 	GLOBAL.videoEdit.down("#videoNameId").setValue('');
+				   	   	 	 	GLOBAL.videoEdit.down("#videoTime").setValue('');
+				   	   	 	 	
+				   	   	 	 	 GLOBAL.videoEdit.hide();
+				   	   	 	 	 
+				   	   	 	 	 	getVideoList();
+				   	   	 	 	})
+				   	   	 	 		
+				   	   	 	 	})
+				   	   	 	 })
+				   	   	 	 
+				   	   	 	 
+				   	   	 	  
+				   	   	 	},
+				   	   	 	style:'background:#6EC131;border:0'
+				   	   	 },{
+				   	   	 	
+				   	   	  xtype:'button',
+				   	   	  width:80,
+				   	   	  height:30,
+				   	   	  text:'取消',
+				   	   	  margin:'10 0 0 30',
+				   	   	  handler:function(){
+				   	   	  	GLOBAL.videoEdit.hide();
+				   	   	  }
+				   	   	 	
+				   	   	 }]
+				   	   	
+				   	   }
+				   	  ]
+				   })
+				
+				]
+			})
+		//如果传了id，则为编辑
+		
+		if(videoId){
+////			getStore();--获取store;  getView()--获取视图
+//		 
+		var data = GLOBAL.videoGrid.getSelectionModel().getSelection()[0].data;
+		 GLOBAL.videoEdit.down("#videoId").setValue(data.Vurl);
+		 GLOBAL.videoEdit.down("#videoNameId").setValue(data.Vname);
+		 GLOBAL.videoEdit.down("#videoTime").setValue(data.Vtime);
+		 GLOBAL.videoId=videoId;
+		}else{
+			GLOBAL.videoId='';
+		}
+		GLOBAL.videoEdit.show();	
+		}
+		 //上传视频
+	   
+	   function upLoad(){
+	   	 
+	   	 var dlg=new Ext.custom.uploadFileWin({
+	   	 	 title:'视频上传',
+	   	 	 customMaxSize:1024 * 1024 * 1024,
+	   	 	 customSetValueInput:'',
+	   	 	 customUploadType:0,
+	   	 	 customFilefieldLabel:'附件',
+	   	 	 customUrl:BPR.domain+'/Handler/UpLoadVideoHandler.ashx',
+	   	 	 cbFn:function(result){
+	   	 	 
+	   	 	 	console.log(result)
+    	   	 	GLOBAL.videoEdit.down("#videoId").setValue(result.cacheName)
+    	   	 	dlg.close();
+    	   	 	Ext.Msg.alert('温馨提示','上传成功')
+	   	 	 }
+	   	 }).show();
+	   	
+	   }
+	   
+	   function delVideo(id){
+	   	
+	   	 $.ajax({
+	   	 	
+	   	 	type:'get',
+	   	 	url:BPR.domain+'/Handler/VideoHandler.ashx?action=delete',
+	   	 	async:false,
+	   	 	data:{ID:id},
+	   	 	dataType:'json'
+	   	 }).done(function(result){
+	   	 	errTip(result,function(){
+	   	 		if(result&&result.success){
+	   	 			Ext.Msg.alert('温馨提示','删除成功',function(){
+	   	 				getVideoList();
+	   	 			})
+	   	 		}
+	   	 	})
+	   	 }).fail(function(){
+	   	 	
+	   	 }).always(function(){
+	   	 	
+	   	 })
+	   	   
+	   }
+	  
+	</script>
+</html>

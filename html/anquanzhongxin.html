@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		
+	<link rel="stylesheet" type="text/css" href="../css/ext-all.css"/>
+	<link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.css"/>
+	<link rel="stylesheet" type="text/css" href="../css/fc-all.css"/>
+	<link rel="stylesheet" type="text/css" href="../css/ClearButton.css"/>
+	</head>
+	<body class="xn-body">
+		
+		<div id="wrap"></div>
+		
+	</body>
+	<script src="../lib/jquery-1.8.3.min.js" type="text/javascript"></script>
+	<script src="../js/basicParameter.js" type="text/javascript"></script>
+	<script src="../lib/ext-all.js" type="text/javascript"></script>
+	<script src="../js/basicExtModule.js" type="text/javascript"></script>
+	<script src="../js/ClearButton.js" type="text/javascript"></script>
+	<script src="../js/tools.js" type="text/javascript"></script>
+	<script src="../lib/PagingToolBar.js" type="text/javascript"></script>
+	 <script type="text/javascript">
+	 	
+	 	Ext.onReady(function(){
+	 		
+	 	 windows=new Ext.custom.basicWindow({
+	 	 	    title:'修改密码',
+	 	 	    width:480,
+	 	 	    height:300,
+	 	 	    margin:'200 0 0 80',
+	 			items:[
+	 				
+	 				new Ext.custom.middletextfield({
+	 					itemId:'current'
+	 					fieldLabel:'当前密码',
+	 					margin:'50 0 0 50',
+	 					beforeLabelTextTpl:required,
+	 					labelAlign:'right'
+	 				}),
+	 				
+	 				new Ext.custom.middletextfield({
+	 					itemId:'fresh',
+	 					fieldLabel:'新密码',
+	 					margin:'10 0 0 50',
+	 					beforeLabelTextTpl:required,
+	 					labelAlign:'right'
+	 				}),
+	 				
+	 				new Ext.custom.middletextfield({
+	 					itemsId:'certain'
+	 					fieldLabel:'确认密码',
+	 					margin:'10 0 0 50',
+	 					beforeLabelTextTpl:required,
+	 					labelAlign:'right'
+	 				}),{
+	 					 xtype:'panel',
+	 					 layout:'hbox',
+	 					 
+	 					 items:[
+	 					     {
+	 					     	
+	 					     	xtype:'button',
+	 					     	width:80,
+	 					     	height:30,
+	 					     	margin:'20 0 0 140',
+	 					     	text:'确定',
+	 					     	style:'background:#6EC131;border:0',
+	 					     	handler:function(){
+	 					     		alert(1)
+	 					     	}
+	 					     },{
+	 					     	
+	 					    xtype:'button',
+	 					    width:80,
+	 					    height:30,
+	 					    margin:'20 0 0 20',
+	 					    text:'取消',
+	 					    handler:function(){
+	 					      windows.hide();	
+	 					    }
+	 					     	
+	 					     }
+	 					     
+	 					  ]
+	 				}
+	 			]
+	 	 	
+	 	 	
+	 	 })
+	 		windows.show()	
+	 			
+	 		
+	 	})
+	 	 
+	 	
+	 	
+	 </script>
+</html>
+
